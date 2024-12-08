@@ -37,7 +37,24 @@ class _MapViewState extends State<MapView> {
     _fetchMapData();
   }
 
-  /// Fetches the logged-in user's details
+  bool _isPointInPolygon(LatLng point, List<LatLng> polygonPoints) {
+    int intersections = 0;
+    for (int i = 0; i < polygonPoints.length; i++) {
+      LatLng p1 = polygonPoints[i];
+      LatLng p2 = polygonPoints[(i + 1) % polygonPoints.length];
+
+      if (point.latitude > p1.latitude != point.latitude > p2.latitude &&
+          point.longitude <
+              (p2.longitude - p1.longitude) *
+                      (point.latitude - p1.latitude) /
+                      (p2.latitude - p1.latitude) +
+                  p1.longitude) {
+        intersections++;
+      }
+    }
+    return intersections % 2 == 1;
+  }
+
   Future<void> _fetchUserDetails() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -60,10 +77,8 @@ class _MapViewState extends State<MapView> {
     }
   }
 
-  /// Sets the user's current location as the map's initial position
   Future<void> _setUserCurrentLocation() async {
     try {
-      // Check for location permission
       LocationPermission permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
@@ -75,7 +90,6 @@ class _MapViewState extends State<MapView> {
         throw 'Location permissions are permanently denied';
       }
 
-      // Get current position
       final position = await Geolocator.getCurrentPosition();
       setState(() {
         _initialPosition = LatLng(position.latitude, position.longitude);
@@ -89,7 +103,6 @@ class _MapViewState extends State<MapView> {
     }
   }
 
-  /// Fetches markers and polygons from Firestore
   Future<void> _fetchMapData() async {
     try {
       final notesCollection = FirebaseFirestore.instance.collection('notes');
@@ -103,7 +116,6 @@ class _MapViewState extends State<MapView> {
       for (var doc in snapshot.docs) {
         final data = doc.data();
 
-        // Load Markers
         if (data.containsKey('latitude') && data.containsKey('longitude')) {
           final position = LatLng(data['latitude'], data['longitude']);
           fetchedMarkers.add(
@@ -112,7 +124,7 @@ class _MapViewState extends State<MapView> {
               position: position,
               icon: data['isLongPress']
                   ? BitmapDescriptor.defaultMarkerWithHue(
-                      BitmapDescriptor.hueRed) // Red for long-tap markers
+                      BitmapDescriptor.hueRed)
                   : BitmapDescriptor.defaultMarker,
               infoWindow: InfoWindow(
                 title: data['title'] ?? 'No Title',
@@ -120,16 +132,15 @@ class _MapViewState extends State<MapView> {
               ),
               onTap: () {
                 if (data['pinCode'] != null) {
-                  _verifyPinCode(data); // Ask for PIN
+                  _verifyPinCode(data);
                 } else {
-                  _showNoteDetails(data); // Directly show note details
+                  _showNoteDetails(data);
                 }
               },
             ),
           );
         }
 
-        // Load Polygons
         if (data.containsKey('polygonPoints')) {
           final polygonPoints = (data['polygonPoints'] as List)
               .map((point) => LatLng(point['lat'], point['lng']))
@@ -141,29 +152,48 @@ class _MapViewState extends State<MapView> {
               strokeColor: Colors.deepPurple,
               fillColor: Colors.deepPurple.withOpacity(0.3),
               strokeWidth: 2,
-              onTap: () {
-                if (data['pinCode'] != null) {
-                  _verifyPinCode(data); // Ask for PIN
+              onTap: () async {
+                final position = await Geolocator.getCurrentPosition();
+                LatLng userLocation =
+                    LatLng(position.latitude, position.longitude);
+
+                if (_isPointInPolygon(userLocation, polygonPoints)) {
+                  if (data['pinCode'] != null) {
+                    _verifyPinCode(data);
+                  } else {
+                    _showNoteDetails(data);
+                  }
                 } else {
-                  _showNoteDetails(data); // Directly show note details
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('You are outside the polygon area.')),
+                  );
                 }
               },
             ),
           );
 
-          // Add a marker at the center of the polygon
           final LatLng center = _calculatePolygonCentroid(polygonPoints);
           fetchedMarkers.add(
             Marker(
               markerId: MarkerId('center_${doc.id}'),
               position: center,
               icon: BitmapDescriptor.defaultMarkerWithHue(
-                  BitmapDescriptor.hueBlue), // Blue for polygon centers
-              onTap: () {
-                if (data['pinCode'] != null) {
-                  _verifyPinCode(data); // Ask for PIN
+                  BitmapDescriptor.hueBlue),
+              onTap: () async {
+                final position = await Geolocator.getCurrentPosition();
+                LatLng userLocation =
+                    LatLng(position.latitude, position.longitude);
+
+                if (_isPointInPolygon(userLocation, polygonPoints)) {
+                  if (data['pinCode'] != null) {
+                    _verifyPinCode(data);
+                  } else {
+                    _showNoteDetails(data);
+                  }
                 } else {
-                  _showNoteDetails(data); // Directly show note details
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('You are outside the polygon area.')),
+                  );
                 }
               },
             ),
@@ -188,7 +218,6 @@ class _MapViewState extends State<MapView> {
     }
   }
 
-  /// Toggles the drawing mode
   void _toggleDrawingMode() {
     setState(() {
       _isDrawingMode = !_isDrawingMode;
@@ -199,7 +228,6 @@ class _MapViewState extends State<MapView> {
     });
   }
 
-  /// Handles touch gestures for drawing
   void _onMapPanUpdate(DragUpdateDetails details) async {
     if (_isDrawingMode) {
       final LatLng latLng = await _getLatLngFromScreenPosition(
@@ -221,7 +249,6 @@ class _MapViewState extends State<MapView> {
     }
   }
 
-  /// Converts screen coordinates to map coordinates
   Future<LatLng> _getLatLngFromScreenPosition(Offset screenPosition) async {
     final ScreenCoordinate screenCoordinate = ScreenCoordinate(
       x: screenPosition.dx.toInt(),
@@ -230,14 +257,13 @@ class _MapViewState extends State<MapView> {
     return await mapController.getLatLng(screenCoordinate);
   }
 
-  /// Opens the NoteForm to save the drawn polygon
   void _savePolygon() {
     if (_polygonPoints.isEmpty) return;
 
     final String noteId = FirebaseFirestore.instance
         .collection('notes')
         .doc()
-        .id; // Generate noteId
+        .id;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -251,9 +277,9 @@ class _MapViewState extends State<MapView> {
           try {
             final newDocRef = FirebaseFirestore.instance
                 .collection('notes')
-                .doc(noteId); // Use noteId
+                .doc(noteId);
             await newDocRef.set({
-              'noteId': noteId, // Save noteId
+              'noteId': noteId,
               'polygonPoints': _polygonPoints
                   .map((point) =>
                       {'lat': point.latitude, 'lng': point.longitude})
@@ -287,7 +313,6 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  /// Displays a PIN verification dialog
   void _verifyPinCode(Map<String, dynamic> noteData) {
     final TextEditingController pinController = TextEditingController();
 
@@ -308,15 +333,15 @@ class _MapViewState extends State<MapView> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.pop(context); // Close dialog
+                Navigator.pop(context);
               },
               child: const Text("Cancel"),
             ),
             TextButton(
               onPressed: () {
                 if (pinController.text.trim() == noteData['pinCode']) {
-                  Navigator.pop(context); // Close dialog
-                  _showNoteDetails(noteData); // Show note details
+                  Navigator.pop(context);
+                  _showNoteDetails(noteData);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text("Incorrect PIN")),
@@ -331,7 +356,6 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  /// Displays note details in a modal
   void _showNoteDetails(Map<String, dynamic> noteData) {
     if (!mounted) return;
 
@@ -353,12 +377,11 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  /// Handles a long press on the map to open a NoteForm
   void _onMapLongPress(LatLng position) {
     final String noteId = FirebaseFirestore.instance
         .collection('notes')
         .doc()
-        .id; // Generate noteId
+        .id;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -372,9 +395,9 @@ class _MapViewState extends State<MapView> {
           try {
             final newDocRef = FirebaseFirestore.instance
                 .collection('notes')
-                .doc(noteId); // Use noteId
+                .doc(noteId);
             await newDocRef.set({
-              'noteId': noteId, // Save noteId
+              'noteId': noteId,
               'latitude': position.latitude,
               'longitude': position.longitude,
               'title': title,
@@ -384,11 +407,11 @@ class _MapViewState extends State<MapView> {
               'userName': showAuthorName ? _userName : null,
               'userSurname': showAuthorName ? _userSurname : null,
               'showAuthorName': showAuthorName,
-              'isLongPress': true, // Mark as a long-press note
+              'isLongPress': true,
               'timestamp': FieldValue.serverTimestamp(),
             });
 
-            _fetchMapData(); // Refresh the map
+            _fetchMapData();
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Note saved successfully!')),
             );
@@ -402,7 +425,6 @@ class _MapViewState extends State<MapView> {
     );
   }
 
-  /// Calculates the centroid of a polygon
   LatLng _calculatePolygonCentroid(List<LatLng> points) {
     double latitudeSum = 0;
     double longitudeSum = 0;
@@ -448,22 +470,17 @@ class _MapViewState extends State<MapView> {
               scrollGesturesEnabled: !_isDrawingMode,
               zoomGesturesEnabled: !_isDrawingMode,
             ),
-
-            // Refresh Map Button (Top-Right)
             Positioned(
               top: 16,
               right: 16,
               child: FloatingActionButton(
-                onPressed: _fetchMapData, // Refresh the map data
+                onPressed: _fetchMapData,
                 backgroundColor: Colors.green,
                 child: const Icon(Icons.refresh, color: Colors.white),
               ),
             ),
-
-            // Toggle Drawing Mode Button (Middle Right)
             Positioned(
-              top: MediaQuery.of(context).size.height *
-                  0.4, // Middle of the screen
+              top: MediaQuery.of(context).size.height * 0.4,
               right: 16,
               child: FloatingActionButton(
                 onPressed: _toggleDrawingMode,
@@ -475,13 +492,10 @@ class _MapViewState extends State<MapView> {
                 ),
               ),
             ),
-
-            // Save Area Button (Bottom Right)
             if (_isDrawingMode)
               Positioned(
-                bottom: 16, // Distance from the bottom
-                left: MediaQuery.of(context).size.width * 0.5 -
-                    100, // Center horizontally
+                bottom: 16,
+                left: MediaQuery.of(context).size.width * 0.5 - 100,
                 child: FloatingActionButton.extended(
                   onPressed: _savePolygon,
                   backgroundColor: Colors.deepPurple,
