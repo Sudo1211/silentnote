@@ -100,182 +100,195 @@ class _NoteFormState extends State<NoteForm> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: MediaQuery.of(context).viewInsets,
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "Leave Note",
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.deepPurple,
-                ),
-              ),
-              const SizedBox(height: 12),
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      minChildSize: 0.5,
+      maxChildSize: 0.9,
+      builder: (context, scrollController) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            return Padding(
+              padding: MediaQuery.of(context).viewInsets,
+              child: SingleChildScrollView(
+                controller: scrollController,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 8),
 
-              // Title Field
-              TextField(
-                controller: _titleController,
-                decoration: InputDecoration(
-                  labelText: 'Title',
-                  prefixIcon: const Icon(Icons.title, size: 20),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              if (!_isTitleValid)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Text(
-                    'Title is required',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 12),
-
-              // Description Field
-              TextField(
-                controller: _descriptionController,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  prefixIcon: const Icon(Icons.description, size: 20),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              if (!_isDescriptionValid)
-                const Padding(
-                  padding: EdgeInsets.only(top: 4),
-                  child: Text(
-                    'Description is required',
-                    style: TextStyle(color: Colors.red, fontSize: 12),
-                  ),
-                ),
-              const SizedBox(height: 12),
-
-              // Image Picker
-              GestureDetector(
-                onTap: _pickImage,
-                child: Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey, width: 1),
-                  ),
-                  child: _selectedImage == null
-                      ? const Center(
-                          child: Text(
-                            'Tap to select an image',
-                            style: TextStyle(color: Colors.grey, fontSize: 14),
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            _selectedImage!,
-                            fit: BoxFit.cover,
+                      // Header
+                      Center(
+                        child: Container(
+                          height: 4,
+                          width: 40,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[400],
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                ),
-              ),
-              if (_selectedImage != null) ...[
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: _deleteImage,
-                    icon: const Icon(Icons.delete, color: Colors.red, size: 18),
-                    label: const Text(
-                      'Remove Image',
-                      style: TextStyle(color: Colors.red, fontSize: 14),
-                    ),
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
+                      ),
+                      const Text(
+                        "Leave Note",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
 
-              // Pin Code Field
-              TextField(
-                controller: _pinController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Pin Code (Optional)',
-                  prefixIcon: const Icon(Icons.lock, size: 20),
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  isDense: true,
-                  contentPadding:
-                      const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide.none,
+                      // Title Field
+                      TextField(
+                        controller: _titleController,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'Title',
+                          prefixIcon: const Icon(Icons.title, size: 20),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          errorText: !_isTitleValid ? 'Title is required' : null,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Description Field
+                      TextField(
+                        controller: _descriptionController,
+                        maxLines: 3,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: 'Description',
+                          prefixIcon: const Icon(Icons.description, size: 20),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          errorText: !_isDescriptionValid
+                              ? 'Description is required'
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Image Picker
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          height: 100,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey),
+                          ),
+                          child: _selectedImage == null
+                              ? const Center(
+                                  child: Text(
+                                    'Tap to select an image',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                )
+                              : ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    _selectedImage!,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                        ),
+                      ),
+                      if (_selectedImage != null)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton.icon(
+                            onPressed: _deleteImage,
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            label: const Text('Remove Image'),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+
+                      // Pin Code Field
+                      TextField(
+                        controller: _pinController,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          labelText: 'Pin Code (Optional)',
+                          prefixIcon: const Icon(Icons.lock, size: 20),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Show Author Checkbox
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: _showAuthorName,
+                            onChanged: (value) {
+                              setState(() {
+                                _showAuthorName = value ?? true;
+                              });
+                            },
+                          ),
+                          const Text('Show my name'),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Save Note Button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _submitNote,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepPurple,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text(
+                            'Save Note',
+                            style: TextStyle(fontSize: 14),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
-
-              // Show Author Checkbox
-              Row(
-                children: [
-                  Checkbox(
-                    value: _showAuthorName,
-                    onChanged: (value) {
-                      setState(() {
-                        _showAuthorName = value ?? true;
-                      });
-                    },
-                  ),
-                  const Text('Show my name', style: TextStyle(fontSize: 14)),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Save Note Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _submitNote,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: const Text(
-                    'Save Note',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
   }
 }

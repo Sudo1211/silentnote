@@ -165,7 +165,8 @@ class _MapViewState extends State<MapView> {
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('You are outside the polygon area.')),
+                    const SnackBar(
+                        content: Text('You are outside the polygon area.')),
                   );
                 }
               },
@@ -192,7 +193,8 @@ class _MapViewState extends State<MapView> {
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('You are outside the polygon area.')),
+                    const SnackBar(
+                        content: Text('You are outside the polygon area.')),
                   );
                 }
               },
@@ -230,21 +232,40 @@ class _MapViewState extends State<MapView> {
 
   void _onMapPanUpdate(DragUpdateDetails details) async {
     if (_isDrawingMode) {
-      final LatLng latLng = await _getLatLngFromScreenPosition(
-        details.localPosition,
-      );
-      if (!_polygonPoints.contains(latLng)) {
-        setState(() {
-          _polygonPoints.add(latLng);
+      try {
+        // Adjust the global position upwards by a specific offset
+        const double verticalOffset = -130; // Adjust this value as needed
+        final Offset adjustedPosition = Offset(
+          details.globalPosition.dx,
+          details.globalPosition.dy + verticalOffset,
+        );
 
-          _currentPolygon = Polygon(
-            polygonId: const PolygonId('drawnPolygon'),
-            points: _polygonPoints,
-            fillColor: Colors.deepPurple.withOpacity(0.3),
-            strokeColor: Colors.deepPurple,
-            strokeWidth: 2,
-          );
-        });
+        // Convert the adjusted position to LatLng
+        final LatLng latLng = await mapController.getLatLng(
+          ScreenCoordinate(
+            x: adjustedPosition.dx.toInt(),
+            y: adjustedPosition.dy.toInt(),
+          ),
+        );
+
+        // Add the adjusted LatLng point to the polygon
+        if (!_polygonPoints.contains(latLng)) {
+          setState(() {
+            _polygonPoints.add(latLng);
+
+            _currentPolygon = Polygon(
+              polygonId: const PolygonId('drawnPolygon'),
+              points: _polygonPoints,
+              fillColor: Colors.deepPurple.withOpacity(0.3),
+              strokeColor: Colors.deepPurple,
+              strokeWidth: 2,
+            );
+          });
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error drawing polygon: $e')),
+        );
       }
     }
   }
@@ -260,10 +281,8 @@ class _MapViewState extends State<MapView> {
   void _savePolygon() {
     if (_polygonPoints.isEmpty) return;
 
-    final String noteId = FirebaseFirestore.instance
-        .collection('notes')
-        .doc()
-        .id;
+    final String noteId =
+        FirebaseFirestore.instance.collection('notes').doc().id;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -275,9 +294,8 @@ class _MapViewState extends State<MapView> {
         onNoteSaved: (String title, String description, String? imagePath,
             String? pinCode, bool showAuthorName) async {
           try {
-            final newDocRef = FirebaseFirestore.instance
-                .collection('notes')
-                .doc(noteId);
+            final newDocRef =
+                FirebaseFirestore.instance.collection('notes').doc(noteId);
             await newDocRef.set({
               'noteId': noteId,
               'polygonPoints': _polygonPoints
@@ -378,10 +396,8 @@ class _MapViewState extends State<MapView> {
   }
 
   void _onMapLongPress(LatLng position) {
-    final String noteId = FirebaseFirestore.instance
-        .collection('notes')
-        .doc()
-        .id;
+    final String noteId =
+        FirebaseFirestore.instance.collection('notes').doc().id;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -393,9 +409,8 @@ class _MapViewState extends State<MapView> {
         onNoteSaved: (String title, String description, String? imagePath,
             String? pinCode, bool showAuthorName) async {
           try {
-            final newDocRef = FirebaseFirestore.instance
-                .collection('notes')
-                .doc(noteId);
+            final newDocRef =
+                FirebaseFirestore.instance.collection('notes').doc(noteId);
             await newDocRef.set({
               'noteId': noteId,
               'latitude': position.latitude,
@@ -495,7 +510,7 @@ class _MapViewState extends State<MapView> {
             if (_isDrawingMode)
               Positioned(
                 bottom: 16,
-                left: MediaQuery.of(context).size.width * 0.5 - 100,
+                left: MediaQuery.of(context).size.width * 0.5 - 70,
                 child: FloatingActionButton.extended(
                   onPressed: _savePolygon,
                   backgroundColor: Colors.deepPurple,

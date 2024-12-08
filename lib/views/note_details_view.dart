@@ -33,14 +33,14 @@ class NoteDetailsView extends StatelessWidget {
               // Header
               Row(
                 children: [
-                  const Icon(Icons.note, color: Colors.deepPurple),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.note, color: Colors.deepPurple, size: 28),
+                  const SizedBox(width: 10),
                   Text(
                     "Note Details",
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
-                        ?.copyWith(color: Colors.deepPurple),
+                        ?.copyWith(color: Colors.deepPurple, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -48,36 +48,44 @@ class NoteDetailsView extends StatelessWidget {
 
               // Image
               if (imageUrl != null && imageUrl!.isNotEmpty)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl!,
-                    height: 150,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Center(child: Icon(Icons.broken_image, size: 80)),
+                Card(
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      imageUrl!,
+                      height: 180,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const Center(child: CircularProgressIndicator());
+                      },
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Center(child: Icon(Icons.broken_image, size: 80)),
+                    ),
                   ),
                 ),
               if (imageUrl != null && imageUrl!.isNotEmpty)
                 const SizedBox(height: 16),
 
               // Title
-              const Text(
-                "Title",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              _buildSectionTitle(context, "Title"),
+              Text(
+                title.isNotEmpty ? title : "Untitled",
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-              const SizedBox(height: 8),
-              Text(title.isNotEmpty ? title : "Untitled"),
               const SizedBox(height: 16),
 
               // Description
-              const Text(
-                "Description",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              _buildSectionTitle(context, "Description"),
+              Text(
+                description.isNotEmpty ? description : "No description provided.",
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
-              const SizedBox(height: 8),
-              Text(description.isNotEmpty ? description : "No description provided."),
               const SizedBox(height: 16),
 
               // Author Information
@@ -85,12 +93,11 @@ class NoteDetailsView extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      "Author",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    _buildSectionTitle(context, "Author"),
+                    Text(
+                      "${authorName ?? ''} ${authorSurname ?? ''}".trim(),
+                      style: Theme.of(context).textTheme.bodyLarge,
                     ),
-                    const SizedBox(height: 8),
-                    Text("${authorName ?? ''} ${authorSurname ?? ''}".trim()),
                   ],
                 ),
               const SizedBox(height: 24),
@@ -102,6 +109,10 @@ class NoteDetailsView extends StatelessWidget {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
                     foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    elevation: 4,
                   ),
                   icon: const Icon(Icons.report, color: Colors.white),
                   label: const Text("Complain"),
@@ -111,6 +122,17 @@ class NoteDetailsView extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  /// Helper: Section Title
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Text(
+      title,
+      style: Theme.of(context)
+          .textTheme
+          .bodyLarge
+          ?.copyWith(fontWeight: FontWeight.bold, color: Colors.deepPurple),
     );
   }
 
