@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "435136341923",
+    "project_id": "silentnote-shakh",
+    "storage_bucket": "silentnote-shakh.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:435136341923:android:896b13f187250af58b5c16",
+        "android_client_info": {
+          "package_name": "com.example.silentnote"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBG1YQeD3qxvWwaZqc0SE-QwrdH2aPa_Mc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
