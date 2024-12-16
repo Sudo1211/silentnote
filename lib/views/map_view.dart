@@ -126,10 +126,7 @@ class _MapViewState extends State<MapView> {
                   ? BitmapDescriptor.defaultMarkerWithHue(
                       BitmapDescriptor.hueRed)
                   : BitmapDescriptor.defaultMarker,
-              infoWindow: InfoWindow(
-                title: data['title'] ?? 'No Title',
-                snippet: data['description'] ?? 'No Description',
-              ),
+              infoWindow: InfoWindow.noText,
               onTap: () {
                 if (data['pinCode'] != null) {
                   _verifyPinCode(data);
