@@ -375,25 +375,26 @@ class _MapViewState extends State<MapView> {
   }
 
   void _showNoteDetails(Map<String, dynamic> noteData) {
-    if (!mounted) return;
+  if (!mounted) return;
 
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      isScrollControlled: true,
-      builder: (context) => NoteDetailsView(
-        title: noteData['title'] ?? 'No Title',
-        description: noteData['description'] ?? 'No Description',
-        imageUrl: noteData['imageUrl'],
-        authorName:
-            noteData['showAuthorName'] == true ? noteData['userName'] : null,
-        authorSurname:
-            noteData['showAuthorName'] == true ? noteData['userSurname'] : null,
-      ),
-    );
-  }
+  showModalBottomSheet(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    isScrollControlled: true,
+    builder: (context) => NoteDetailsView(
+      title: noteData['title'] ?? 'No Title',
+      description: noteData['description'] ?? 'No Description',
+      imageUrl: noteData['imagePath'], // Ensure this matches Firestore's field name
+      authorName: noteData['showAuthorName'] == true ? noteData['userName'] : null,
+      authorSurname: noteData['showAuthorName'] == true ? noteData['userSurname'] : null,
+      noteId: noteData['noteId'], // Pass noteId as well
+      timestamp: noteData['timestamp'], // Pass the timestamp
+    ),
+  );
+}
+
 
   void _onMapLongPress(LatLng position) {
     final String noteId =

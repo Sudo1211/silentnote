@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart'; // For formatting the timestamp
 
 class NoteDetailsView extends StatelessWidget {
   final String title;
@@ -7,7 +8,8 @@ class NoteDetailsView extends StatelessWidget {
   final String? imageUrl;
   final String? authorName;
   final String? authorSurname;
-  final String? noteId; // Firestore note ID
+  final String? noteId;
+  final Timestamp? timestamp;
 
   const NoteDetailsView({
     super.key,
@@ -17,6 +19,7 @@ class NoteDetailsView extends StatelessWidget {
     this.authorName,
     this.authorSurname,
     this.noteId,
+    this.timestamp,
   });
 
   @override
@@ -98,9 +101,23 @@ class NoteDetailsView extends StatelessWidget {
                       "${authorName ?? ''} ${authorSurname ?? ''}".trim(),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
+                    const SizedBox(height: 16),
                   ],
                 ),
-              const SizedBox(height: 24),
+
+              // Timestamp
+              if (timestamp != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionTitle(context, "Created On"),
+                    Text(
+                      DateFormat('yyyy-MM-dd HH:mm:ss').format(timestamp!.toDate()),
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
 
               // Complain Button
               Center(
