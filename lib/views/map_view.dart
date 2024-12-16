@@ -486,7 +486,7 @@ class _MapViewState extends State<MapView> {
               zoomGesturesEnabled: !_isDrawingMode,
             ),
             Positioned(
-              top: 16,
+              top: MediaQuery.of(context).size.height * 0.4 + 72,
               right: 16,
               child: FloatingActionButton(
                 onPressed: _fetchMapData,
